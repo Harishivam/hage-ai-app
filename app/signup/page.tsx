@@ -17,7 +17,6 @@ export default function SignupPage() {
     try {
       setIsLoading(true);
 
-      // First register the user
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -26,13 +25,14 @@ export default function SignupPage() {
         body: JSON.stringify({
           email: values.email,
           password: values.password,
-          name: values.email.split("@")[0], // Simple name from email
+          name: values.email.split("@")[0],
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create account");
+        throw new Error(data.message || "Failed to create account");
       }
 
       toast({
@@ -40,7 +40,6 @@ export default function SignupPage() {
         description: "Account created successfully",
       });
 
-      // Then sign in the user
       const signInResult = await signIn("credentials", {
         email: values.email,
         password: values.password,
@@ -48,18 +47,15 @@ export default function SignupPage() {
       });
 
       if (signInResult?.error) {
-        console.warn("Sign-in after registration failed", signInResult.error);
-        // Just redirect to login page if auto-login fails
+        console.error("Sign-in after registration failed:", signInResult.error);
         router.push("/login");
         return;
       }
 
-      // Registration and login successful, redirect to dashboard
       router.push("/dashboard");
       router.refresh();
     } catch (error: any) {
       console.error("Signup error:", error);
-
       toast({
         title: "Error",
         description: error.message || "Failed to create account",
